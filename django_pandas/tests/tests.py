@@ -1,2 +1,2 @@
-from .test_manager import *
 from .test_io import *
+from .test_manager import *

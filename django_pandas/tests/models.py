@@ -1,5 +1,6 @@
 from django.db import models
 from six import python_2_unicode_compatible
+
 from django_pandas.managers import DataFrameManager, PassThroughManager
 
 
@@ -17,15 +18,14 @@ class MyModel(models.Model):
             self.col1,
             self.col2,
             self.col3,
-            self.col4
         )
 
 
 class MyModelChoice(models.Model):
     CHOICES = [
-        (1, u'First \U0001f947'),
-        (2, u'Second \U0001f948'),
-        (3, u'Third \U0001f949'),
+        (1, "First \U0001f947"),
+        (2, "Second \U0001f948"),
+        (3, "Third \U0001f949"),
     ]
     col1 = models.IntegerField(choices=CHOICES)
     col2 = models.FloatField(null=True)
@@ -34,7 +34,6 @@ class MyModelChoice(models.Model):
 
 @python_2_unicode_compatible
 class DataFrame(models.Model):
-
     index = models.CharField(max_length=1)
     col1 = models.IntegerField()
     col2 = models.FloatField()
@@ -49,7 +48,6 @@ class DataFrame(models.Model):
             self.col1,
             self.col2,
             self.col3,
-            self.col4
         )
 
 
@@ -62,9 +60,7 @@ class LongTimeSeries(models.Model):
     objects = DataFrameManager()
 
     def __str__(self):
-        return "{} {} {}".format(self.date_ix,
-                                 self.series_name,
-                                 self.value)
+        return "{} {} {}".format(self.date_ix, self.series_name, self.value)
 
 
 @python_2_unicode_compatible
@@ -83,8 +79,8 @@ class WideTimeSeries(models.Model):
             self.col1,
             self.col2,
             self.col3,
-            self.col4
         )
+
 
 @python_2_unicode_compatible
 class WideTimeSeriesDateField(models.Model):
@@ -102,7 +98,6 @@ class WideTimeSeriesDateField(models.Model):
             self.col1,
             self.col2,
             self.col3,
-            self.col4
         )
 
 
@@ -119,8 +114,12 @@ class PivotData(models.Model):
 
     def __str__(self):
         return "{0} {1} {2} {3} {4} {5}".format(
-            self.row_col_a, self.row_col_b, self.row_col_c,
-            self.value_col_d, self.value_col_e, self.value_col_f
+            self.row_col_a,
+            self.row_col_b,
+            self.row_col_c,
+            self.value_col_d,
+            self.value_col_e,
+            self.value_col_f,
         )
 
 
@@ -167,8 +166,9 @@ class TradeLog(models.Model):
             self.log_datetime,
             self.price,
             self.volume,
-            self.note
+            self.note,
         )
+
 
 @python_2_unicode_compatible
 class Portfolio(models.Model):
@@ -217,7 +217,7 @@ class Dude(models.Model):
 
 class Car(models.Model):
     name = models.CharField(max_length=20)
-    owner = models.ForeignKey(Dude, related_name='cars_owned', on_delete=models.CASCADE)
+    owner = models.ForeignKey(Dude, related_name="cars_owned", on_delete=models.CASCADE)
 
     objects = PassThroughManager(DudeQuerySet)
 
@@ -242,6 +242,8 @@ class Spot(models.Model):
     secure = models.BooleanField(default=True)
     closed = models.BooleanField(default=False)
     secret = models.BooleanField(default=False)
-    owner = models.ForeignKey(Dude, related_name='spots_owned', on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        Dude, related_name="spots_owned", on_delete=models.CASCADE
+    )
 
     objects = SpotManager.for_queryset_class(SpotQuerySet)()

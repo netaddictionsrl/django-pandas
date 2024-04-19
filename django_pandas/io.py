@@ -1,7 +1,7 @@
 import django
 import pandas as pd
 
-from .utils import update_with_verbose, get_related_model
+from .utils import get_related_model, update_with_verbose
 
 FieldDoesNotExist = (
     django.db.models.fields.FieldDoesNotExist
@@ -13,7 +13,7 @@ FieldDoesNotExist = (
 def to_fields(qs, fieldnames):
     for fieldname in fieldnames:
         model = qs.model
-        for fieldname_part in fieldname.split('__'):
+        for fieldname_part in fieldname.split("__"):
             try:
                 field = model._meta.get_field(fieldname_part)
             except FieldDoesNotExist:
@@ -38,12 +38,19 @@ def is_values_queryset(qs):
     else:
         try:
             return qs._iterable_class == django.db.models.query.ValuesIterable
-        except:
+        except Exception:
             return False
 
 
-def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
-               verbose=True, datetime_index=False, column_names=None):
+def read_frame(
+    qs,
+    fieldnames=(),
+    index_col=None,
+    coerce_float=False,
+    verbose=True,
+    datetime_index=False,
+    column_names=None,
+):
     """
     Returns a dataframe from a QuerySet
 
@@ -109,22 +116,26 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
             extra_field_names = list(qs.query.extra_select)
             select_field_names = list(qs.query.values_select)
 
-        fieldnames = select_field_names + annotation_field_names + \
-            extra_field_names
-        fields = [None if '__' in f else qs.model._meta.get_field(f)
-                  for f in select_field_names] + \
-            [None] * (len(annotation_field_names) + len(extra_field_names))
+        fieldnames = select_field_names + annotation_field_names + extra_field_names
+        fields = [
+            None if "__" in f else qs.model._meta.get_field(f)
+            for f in select_field_names
+        ] + [None] * (len(annotation_field_names) + len(extra_field_names))
 
         uniq_fields = set()
         fieldnames, fields = zip(
-            *(f for f in zip(fieldnames, fields)
-              if f[0] not in uniq_fields and not uniq_fields.add(f[0])))
+            *(
+                f
+                for f in zip(fieldnames, fields)
+                if f[0] not in uniq_fields and not uniq_fields.add(f[0])
+            )
+        )
     else:
         try:
             fields = qs.model._meta.fields
             fieldnames = [f.name for f in fields]
             fieldnames += list(qs.query.annotation_select.keys())
-        except:
+        except Exception:
             pass
 
     if is_values_queryset(qs):
@@ -132,7 +143,7 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
     else:
         try:
             recs = list(qs.values_list(*fieldnames))
-        except:
+        except Exception:
             if fieldnames:
                 recs = [object_to_dict(q, fieldnames) for q in qs]
             else:
@@ -141,7 +152,7 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
     df = pd.DataFrame.from_records(
         recs,
         columns=column_names if column_names else fieldnames,
-        coerce_float=coerce_float
+        coerce_float=coerce_float,
     )
 
     if verbose:
@@ -157,15 +168,15 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
 
 def object_to_dict(obj, fields: list = None):
     """
-        Convert obj to a dictionary
+    Convert obj to a dictionary
 
-        Parameters
-        ----------
+    Parameters
+    ----------
 
-        obj: obj to an item of QuerySet
-        fieldnames: reserved fields, default to all fields
+    obj: obj to an item of QuerySet
+    fieldnames: reserved fields, default to all fields
     """
     if not fields:
-        obj.__dict__.pop('_state')
+        obj.__dict__.pop("_state")
         return obj.__dict__
     return {field: obj.__dict__.get(field) for field in fields}

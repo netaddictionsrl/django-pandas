@@ -1,16 +1,24 @@
-from django.db.models.query import QuerySet
-from .io import read_frame
-import django
 from django.db import models
+from django.db.models.query import QuerySet
+
+from .io import read_frame
 
 
 class PassThroughManagerMixin(object):
     """
     A mixin that enables you to call custom QuerySet methods from your manager.
     """
-    _deny_methods = ['__getstate__', '__setstate__', '__getinitargs__',
-                     '__getnewargs__', '__copy__', '__deepcopy__', '_db',
-                     '__slots__']
+
+    _deny_methods = [
+        "__getstate__",
+        "__setstate__",
+        "__getinitargs__",
+        "__getnewargs__",
+        "__copy__",
+        "__deepcopy__",
+        "_db",
+        "__slots__",
+    ]
 
     def __init__(self, queryset_cls=None):
         self._queryset_cls = queryset_cls
@@ -39,8 +47,7 @@ class PassThroughManagerMixin(object):
 
     @classmethod
     def for_queryset_class(cls, queryset_cls):
-        return create_pass_through_manager_for_queryset_class(
-            cls, queryset_cls)
+        return create_pass_through_manager_for_queryset_class(cls, queryset_cls)
 
 
 class PassThroughManager(PassThroughManagerMixin, models.Manager):
@@ -62,6 +69,7 @@ class PassThroughManager(PassThroughManagerMixin, models.Manager):
         objects = PassThroughManager.for_queryset_class(PostQuerySet)()
 
     """
+
     pass
 
 
@@ -80,11 +88,19 @@ def create_pass_through_manager_for_queryset_class(base, queryset_cls):
 
 
 class DataFrameQuerySet(QuerySet):
-
-    def to_pivot_table(self, fieldnames=(), verbose=True,
-                       values=None, rows=None, cols=None,
-                       aggfunc='mean', fill_value=None, margins=False,
-                       dropna=True, coerce_float=True):
+    def to_pivot_table(
+        self,
+        fieldnames=(),
+        verbose=True,
+        values=None,
+        rows=None,
+        cols=None,
+        aggfunc="mean",
+        fill_value=None,
+        margins=False,
+        dropna=True,
+        coerce_float=True,
+    ):
         """
         A convenience method for creating a spread sheet style pivot table
         as a DataFrame
@@ -125,18 +141,32 @@ class DataFrameQuerySet(QuerySet):
         coerce_float:   Attempt to convert values to non-string, non-numeric
                         objects (like decimal.Decimal) to floating point.
         """
-        df = self.to_dataframe(fieldnames, verbose=verbose,
-                               coerce_float=coerce_float)
+        df = self.to_dataframe(fieldnames, verbose=verbose, coerce_float=coerce_float)
 
-        return df.pivot_table(values=values, fill_value=fill_value, index=rows,
-                              columns=cols, aggfunc=aggfunc, margins=margins,
-                              dropna=dropna)
+        return df.pivot_table(
+            values=values,
+            fill_value=fill_value,
+            index=rows,
+            columns=cols,
+            aggfunc=aggfunc,
+            margins=margins,
+            dropna=dropna,
+        )
 
-    def to_timeseries(self, fieldnames=(), verbose=True,
-                      index=None, storage='wide',
-                      values=None, pivot_columns=None, freq=None,
-                      coerce_float=True, rs_kwargs=None, agg_args=None,
-                      agg_kwargs=None):
+    def to_timeseries(
+        self,
+        fieldnames=(),
+        verbose=True,
+        index=None,
+        storage="wide",
+        values=None,
+        pivot_columns=None,
+        freq=None,
+        coerce_float=True,
+        rs_kwargs=None,
+        agg_args=None,
+        agg_kwargs=None,
+    ):
         """
         A convenience method for creating a time series DataFrame i.e the
         DataFrame index will be an instance of  DateTime or PeriodIndex
@@ -210,34 +240,39 @@ class DataFrameQuerySet(QuerySet):
         coerce_float:   Attempt to convert values to non-string, non-numeric
                         objects (like decimal.Decimal) to floating point.
         """
-        assert index is not None, 'You must supply an index field'
-        assert storage in ('wide', 'long'), 'storage must be wide or long'
+        assert index is not None, "You must supply an index field"
+        assert storage in ("wide", "long"), "storage must be wide or long"
         if rs_kwargs is None:
             rs_kwargs = {}
 
-        if storage == 'wide':
-            df = self.to_dataframe(fieldnames, verbose=verbose, index=index,
-                                   coerce_float=coerce_float, datetime_index=True)
+        if storage == "wide":
+            df = self.to_dataframe(
+                fieldnames,
+                verbose=verbose,
+                index=index,
+                coerce_float=coerce_float,
+                datetime_index=True,
+            )
         else:
-            df = self.to_dataframe(fieldnames, verbose=verbose,
-                                   coerce_float=coerce_float, datetime_index=True)
-            assert values is not None, 'You must specify a values field'
-            assert pivot_columns is not None, 'You must specify pivot_columns'
+            df = self.to_dataframe(
+                fieldnames,
+                verbose=verbose,
+                coerce_float=coerce_float,
+                datetime_index=True,
+            )
+            assert values is not None, "You must specify a values field"
+            assert pivot_columns is not None, "You must specify pivot_columns"
 
             if isinstance(pivot_columns, (tuple, list)):
-                df['combined_keys'] = ''
+                df["combined_keys"] = ""
                 for c in pivot_columns:
-                    df['combined_keys'] += df[c].str.upper() + '.'
+                    df["combined_keys"] += df[c].str.upper() + "."
 
-                df['combined_keys'] += values.lower()
+                df["combined_keys"] += values.lower()
 
-                df = df.pivot(index=index,
-                              columns='combined_keys',
-                              values=values)
+                df = df.pivot(index=index, columns="combined_keys", values=values)
             else:
-                df = df.pivot(index=index,
-                              columns=pivot_columns,
-                              values=values)
+                df = df.pivot(index=index, columns=pivot_columns, values=values)
 
         if freq is not None:
             if agg_kwargs is None:
@@ -248,8 +283,14 @@ class DataFrameQuerySet(QuerySet):
 
         return df
 
-    def to_dataframe(self, fieldnames=(), verbose=True, index=None,
-                     coerce_float=False, datetime_index=False):
+    def to_dataframe(
+        self,
+        fieldnames=(),
+        verbose=True,
+        index=None,
+        coerce_float=False,
+        datetime_index=False,
+    ):
         """
         Returns a DataFrame from the queryset
 
@@ -278,9 +319,14 @@ class DataFrameQuerySet(QuerySet):
                         DateTimeIndex.
         """
 
-        return read_frame(self, fieldnames=fieldnames, verbose=verbose,
-                          index_col=index, coerce_float=coerce_float,
-                          datetime_index=datetime_index)
+        return read_frame(
+            self,
+            fieldnames=fieldnames,
+            verbose=verbose,
+            index_col=index,
+            coerce_float=coerce_float,
+            datetime_index=datetime_index,
+        )
 
 
 DataFrameManager = models.Manager.from_queryset(DataFrameQuerySet)

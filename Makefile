@@ -51,13 +51,13 @@ docs:
 	open docs/_build/html/index.html
 
 release: clean
-	python3 -m build
-	python3 -m twine upload --repository pypi dist/*
+	python -m build
+	python -m twine upload --repository pypi dist/*
 
 test-release: clean
-	python3 -m build
-	python3 -m twine upload --repository testpypi dist/*
+	python -m build
+	python -m twine upload --repository testpypi dist/*
 
 dist: clean
-	python3 -m build
+	python -m build
 	ls -l dist
